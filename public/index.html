@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>艺术风格迁移画廊</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎨 艺术风格迁移画廊</h1>
+            <p>上传照片，选择艺术风格，创造独特作品</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="create">创作</button>
+            <button class="tab-btn" data-tab="styles">风格库</button>
+            <button class="tab-btn" data-tab="gallery">画廊</button>
+            <button class="tab-btn" data-tab="community">社区</button>
+        </div>
+
+        <div class="tab-content">
+            <div id="create" class="tab-pane active">
+                <div class="upload-section">
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-icon">📷</div>
+                        <p>点击或拖拽图片到此处上传</p>
+                        <input type="file" id="fileInput" accept="image/*" hidden>
+                    </div>
+                </div>
+
+                <div class="editor-section" id="editorSection" style="display: none;">
+                    <div class="image-preview">
+                        <div class="preview-box">
+                            <h3>原图</h3>
+                            <canvas id="originalCanvas"></canvas>
+                        </div>
+                        <div class="preview-box">
+                            <h3>风格化效果</h3>
+                            <canvas id="styledCanvas"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="controls">
+                        <div class="control-group">
+                            <label>选择艺术风格</label>
+                            <div class="style-grid" id="styleGrid">
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label>风格强度: <span id="intensityValue">50</span>%</label>
+                            <input type="range" id="intensitySlider" min="0" max="100" value="50">
+                        </div>
+
+                        <div class="control-group">
+                            <label>下载设置</label>
+                            <div class="download-settings">
+                                <select id="printSize">
+                                    <option value="original">原图尺寸</option>
+                                    <option value="4R">4R (10x15cm)</option>
+                                    <option value="5R">5R (13x18cm)</option>
+                                    <option value="A4">A4 (21x29.7cm)</option>
+                                    <option value="A3">A3 (29.7x42cm)</option>
+                                    <option value="A2">A2 (42x59.4cm)</option>
+                                </select>
+                                <select id="imageQuality">
+                                    <option value="1">最高质量 (PNG)</option>
+                                    <option value="0.95">高质量 (JPG 95%)</option>
+                                    <option value="0.8">中等质量 (JPG 80%)</option>
+                                    <option value="0.6">低质量 (JPG 60%)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button id="resetBtn" class="btn btn-secondary">重新选择</button>
+                            <button id="downloadBtn" class="btn btn-secondary">下载高清图</button>
+                            <button id="saveBtn" class="btn btn-primary">保存到画廊</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="styles" class="tab-pane">
+                <div class="gallery-header">
+                    <h2>自定义风格库</h2>
+                    <button id="uploadStyleBtn" class="btn btn-primary">上传风格图</button>
+                </div>
+                <input type="file" id="styleFileInput" accept="image/*" hidden>
+                <div class="style-library-grid" id="styleLibraryGrid">
+                    <div class="empty-state">
+                        <div class="empty-icon">🎨</div>
+                        <p>还没有自定义风格，上传一张风格图片开始吧！</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="gallery" class="tab-pane">
+                <div class="gallery-header">
+                    <h2>我的艺术作品</h2>
+                    <button id="refreshGallery" class="btn btn-small">刷新</button>
+                </div>
+                <div class="gallery-grid" id="galleryGrid">
+                    <div class="empty-state">
+                        <div class="empty-icon">🖼️</div>
+                        <p>画廊为空，快去创作你的第一幅作品吧！</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="community" class="tab-pane">
+                <div class="gallery-header">
+                    <h2>社区作品展示</h2>
+                    <button id="refreshCommunity" class="btn btn-small">刷新</button>
+                </div>
+                <div class="gallery-grid" id="communityGrid">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <img id="modalImage" src="" alt="Artwork">
+            <div class="modal-info">
+                <p id="modalStyle"></p>
+                <p id="modalDate"></p>
+                <div class="modal-actions">
+                    <button id="likeBtn" class="btn btn-small">❤️ <span id="likeCount">0</span></button>
+                </div>
+                <div class="comments-section">
+                    <h4>评论</h4>
+                    <div class="comment-input">
+                        <input type="text" id="commentAuthor" placeholder="昵称" value="匿名用户">
+                        <input type="text" id="commentContent" placeholder="写下你的评论...">
+                        <button id="addCommentBtn" class="btn btn-small">发表</button>
+                    </div>
+                    <div id="commentsList" class="comments-list">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

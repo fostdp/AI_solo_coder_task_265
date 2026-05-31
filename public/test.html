@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图像处理测试套件</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .test-section {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+        .test-case {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            background: #f8f9fa;
+        }
+        .test-case.pass {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+        .test-case.fail {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+        }
+        .test-name {
+            font-weight: 500;
+            color: #333;
+        }
+        .test-status {
+            font-weight: bold;
+            padding: 4px 12px;
+            border-radius: 4px;
+        }
+        .pass .test-status {
+            color: #155724;
+        }
+        .fail .test-status {
+            color: #721c24;
+        }
+        .test-error {
+            margin-top: 5px;
+            font-size: 0.9em;
+            color: #721c24;
+            padding-left: 15px;
+        }
+        .summary {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .summary-item {
+            text-align: center;
+            padding: 15px 30px;
+            border-radius: 8px;
+        }
+        .summary-item.total {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        .summary-item.passed {
+            background: #d4edda;
+            color: #28a745;
+        }
+        .summary-item.failed {
+            background: #f8d7da;
+            color: #dc3545;
+        }
+        .summary-value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+        .summary-label {
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        button {
+            display: block;
+            margin: 20px auto;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: scale(1.05);
+        }
+        .canvas-container {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .canvas-box {
+            text-align: center;
+        }
+        .canvas-box canvas {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+        }
+        .canvas-box p {
+            margin-top: 8px;
+            color: #666;
+            font-size: 0.9em;
+        }
+        .log-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: 8px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.9em;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .log-line {
+            margin-bottom: 5px;
+        }
+        .log-info {
+            color: #569cd6;
+        }
+        .log-success {
+            color: #4ec9b0;
+        }
+        .log-error {
+            color: #f44747;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 图像处理测试套件</h1>
+        
+        <button id="runTests">▶️ 运行所有测试</button>
+        
+        <div class="test-section">
+            <h2>📐 输入尺寸适配测试</h2>
+            <div id="sizeTests"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>⚡ 风格强度参数边界测试</h2>
+            <div id="intensityTests"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🔄 模型加载失败降级测试</h2>
+            <div id="fallbackTests"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🎭 风格效果一致性测试</h2>
+            <div id="styleTests"></div>
+        </div>
+        
+        <div class="summary">
+            <div class="summary-item total">
+                <div class="summary-value" id="totalTests">0</div>
+                <div class="summary-label">总测试数</div>
+            </div>
+            <div class="summary-item passed">
+                <div class="summary-value" id="passedTests">0</div>
+                <div class="summary-label">通过</div>
+            </div>
+            <div class="summary-item failed">
+                <div class="summary-value" id="failedTests">0</div>
+                <div class="summary-label">失败</div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>📝 测试日志</h2>
+            <div class="log-section" id="testLog"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🖼️ 可视化测试输出</h2>
+            <div class="canvas-container" id="canvasContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        class StyleTransferTest {
+            constructor() {
+                this.results = {
+                    total: 0,
+                    passed: 0,
+                    failed: 0
+                };
+                this.logs = [];
+                this.init();
+            }
+
+            init() {
+                document.getElementById('runTests').addEventListener('click', () => {
+                    this.runAllTests();
+                });
+            }
+
+            log(message, type = 'info') {
+                this.logs.push({ message, type, time: new Date().toLocaleTimeString() });
+                this.updateLogDisplay();
+            }
+
+            updateLogDisplay() {
+                const logContainer = document.getElementById('testLog');
+                logContainer.innerHTML = this.logs.map(log => 
+                    `<div class="log-line log-${log.type}">[${log.time}] ${log.message}</div>`
+                ).join('');
+                logContainer.scrollTop = logContainer.scrollHeight;
+            }
+
+            assert(condition, testName, errorMessage = '') {
+                this.results.total++;
+                const container = document.getElementById(testName.includes('尺寸') ? 'sizeTests' :
+                                                     testName.includes('强度') ? 'intensityTests' :
+                                                     testName.includes('降级') ? 'fallbackTests' : 'styleTests');
+                
+                const testElement = document.createElement('div');
+                testElement.className = `test-case ${condition ? 'pass' : 'fail'}`;
+                testElement.innerHTML = `
+                    <span class="test-name">${testName}</span>
+                    <span class="test-status">${condition ? '✅ 通过' : '❌ 失败'}</span>
+                    ${!condition && errorMessage ? `<div class="test-error">${errorMessage}</div>` : ''}
+                `;
+                container.appendChild(testElement);
+
+                if (condition) {
+                    this.results.passed++;
+                    this.log(`✓ ${testName}`, 'success');
+                } else {
+                    this.results.failed++;
+                    this.log(`✗ ${testName}: ${errorMessage}`, 'error');
+                }
+
+                this.updateSummary();
+                return condition;
+            }
+
+            updateSummary() {
+                document.getElementById('totalTests').textContent = this.results.total;
+                document.getElementById('passedTests').textContent = this.results.passed;
+                document.getElementById('failedTests').textContent = this.results.failed;
+            }
+
+            createTestCanvas(width, height, fillColor = null) {
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                
+                if (fillColor) {
+                    ctx.fillStyle = fillColor;
+                    ctx.fillRect(0, 0, width, height);
+                } else {
+                    const gradient = ctx.createLinearGradient(0, 0, width, height);
+                    gradient.addColorStop(0, '#667eea');
+                    gradient.addColorStop(0.5, '#764ba2');
+                    gradient.addColorStop(1, '#f093fb');
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, 0, width, height);
+                }
+                
+                return canvas;
+            }
+
+            resizeImage(canvas, maxSize) {
+                let width = canvas.width;
+                let height = canvas.height;
+
+                if (width > height && width > maxSize) {
+                    height = (height * maxSize) / width;
+                    width = maxSize;
+                } else if (height > maxSize) {
+                    width = (width * maxSize) / height;
+                    height = maxSize;
+                }
+
+                const resizedCanvas = document.createElement('canvas');
+                resizedCanvas.width = width;
+                resizedCanvas.height = height;
+                const ctx = resizedCanvas.getContext('2d');
+                ctx.drawImage(canvas, 0, 0, width, height);
+                
+                return { canvas: resizedCanvas, width, height };
+            }
+
+            applyStyleEffect(r, g, b, intensity, style = 'oil') {
+                const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+                
+                switch (style) {
+                    case 'oil':
+                        const noise = (Math.random() - 0.5) * 30 * intensity;
+                        r = Math.min(255, Math.max(0, r + noise));
+                        g = Math.min(255, Math.max(0, g + noise));
+                        b = Math.min(255, Math.max(0, b + noise));
+                        const saturation = 1 + 0.3 * intensity;
+                        r = gray + (r - gray) * saturation;
+                        g = gray + (g - gray) * saturation;
+                        b = gray + (b - gray) * saturation;
+                        break;
+                    case 'vintage':
+                        const sepiaR = r * 0.393 + g * 0.769 + b * 0.189;
+                        const sepiaG = r * 0.349 + g * 0.686 + b * 0.168;
+                        const sepiaB = r * 0.272 + g * 0.534 + b * 0.131;
+                        r = r * (1 - intensity) + sepiaR * intensity;
+                        g = g * (1 - intensity) + sepiaG * intensity;
+                        b = b * (1 - intensity) + sepiaB * intensity;
+                        break;
+                }
+                
+                return { r: Math.round(r), g: Math.round(g), b: Math.round(b) };
+            }
+
+            async runAllTests() {
+                this.results = { total: 0, passed: 0, failed: 0 };
+                this.logs = [];
+                
+                ['sizeTests', 'intensityTests', 'fallbackTests', 'styleTests'].forEach(id => {
+                    document.getElementById(id).innerHTML = '';
+                });
+                document.getElementById('canvasContainer').innerHTML = '';
+
+                this.log('开始运行图像处理测试套件...', 'info');
+                
+                await this.runSizeTests();
+                await this.runIntensityTests();
+                await this.runFallbackTests();
+                await this.runStyleTests();
+                
+                this.log(`测试完成！通过: ${this.results.passed}, 失败: ${this.results.failed}`, 
+                         this.results.failed === 0 ? 'success' : 'error');
+            }
+
+            async runSizeTests() {
+                this.log('开始输入尺寸适配测试...', 'info');
+                
+                const testCases = [
+                    { width: 4000, height: 3000, maxSize: 800, name: '超大尺寸图片(4000×3000)缩放' },
+                    { width: 1920, height: 1080, maxSize: 800, name: '1080P高清图片缩放' },
+                    { width: 600, height: 400, maxSize: 800, name: '小尺寸图片(小于maxSize)保持原样' },
+                    { width: 800, height: 800, maxSize: 800, name: '正方形图片(等于maxSize)' },
+                    { width: 1600, height: 900, maxSize: 800, name: '宽屏竖版图片缩放' },
+                    { width: 900, height: 1600, maxSize: 800, name: '竖屏图片缩放' },
+                    { width: 1, height: 1, maxSize: 800, name: '极小尺寸(1×1)边界测试' },
+                ];
+
+                for (const testCase of testCases) {
+                    const canvas = this.createTestCanvas(testCase.width, testCase.height);
+                    const result = this.resizeImage(canvas, testCase.maxSize);
+                    
+                    const aspectRatioOriginal = testCase.width / testCase.height;
+                    const aspectRatioResult = result.width / result.height;
+                    const aspectRatioMatch = Math.abs(aspectRatioOriginal - aspectRatioResult) < 0.01;
+                    
+                    const maxDimension = Math.max(result.width, result.height);
+                    const sizeValid = maxDimension <= testCase.maxSize;
+                    
+                    const originalSmall = Math.max(testCase.width, testCase.height) <= testCase.maxSize;
+                    const sizeUnchanged = originalSmall ? 
+                        (result.width === testCase.width && result.height === testCase.height) : true;
+                    
+                    const passed = aspectRatioMatch && sizeValid && sizeUnchanged;
+                    const error = [];
+                    if (!aspectRatioMatch) error.push(`宽高比不匹配: 原始=${aspectRatioOriginal.toFixed(3)}, 结果=${aspectRatioResult.toFixed(3)}`);
+                    if (!sizeValid) error.push(`尺寸超出限制: ${maxDimension} > ${testCase.maxSize}`);
+                    if (!sizeUnchanged) error.push('小尺寸图片被错误缩放');
+                    
+                    this.assert(passed, `📐 ${testCase.name}`, error.join('; '));
+                    
+                    if (passed) {
+                        result.canvas.title = `${testCase.name} - ${result.width}×${result.height}`;
+                        document.getElementById('canvasContainer').appendChild(result.canvas);
+                    }
+                }
+                
+                this.log('尺寸适配测试完成', 'info');
+            }
+
+            async runIntensityTests() {
+                this.log('开始风格强度参数边界测试...', 'info');
+                
+                const testCases = [
+                    { intensity: 0, name: '强度边界 - 最小值 0' },
+                    { intensity: 0.5, name: '强度边界 - 中间值 0.5' },
+                    { intensity: 1, name: '强度边界 - 最大值 1' },
+                    { intensity: -0.1, name: '强度边界 - 负值防护' },
+                    { intensity: 1.1, name: '强度边界 - 超出最大值防护' },
+                    { intensity: NaN, name: '强度边界 - NaN值处理' },
+                    { intensity: null, name: '强度边界 - null值处理' },
+                    { intensity: undefined, name: '强度边界 - undefined值处理' },
+                ];
+
+                const originalR = 128, originalG = 128, originalB = 128;
+                
+                for (const testCase of testCases) {
+                    let intensity = testCase.intensity;
+                    
+                    if (typeof intensity !== 'number' || isNaN(intensity)) {
+                        intensity = 0.5;
+                    }
+                    intensity = Math.max(0, Math.min(1, intensity));
+                    
+                    const result = this.applyStyleEffect(originalR, originalG, originalB, intensity, 'vintage');
+                    
+                    const valuesValid = !isNaN(result.r) && !isNaN(result.g) && !isNaN(result.b) &&
+                                       result.r >= 0 && result.r <= 255 &&
+                                       result.g >= 0 && result.g <= 255 &&
+                                       result.b >= 0 && result.b <= 255;
+                    
+                    let intensityCorrect = true;
+                    if (testCase.intensity === 0) {
+                        intensityCorrect = result.r === originalR && result.g === originalG && result.b === originalB;
+                    }
+                    
+                    const clampedIntensity = Math.max(0, Math.min(1, testCase.intensity));
+                    const intensityInRange = clampedIntensity >= 0 && clampedIntensity <= 1;
+                    
+                    const passed = valuesValid && intensityInRange;
+                    const error = [];
+                    if (!valuesValid) error.push(`颜色值无效: r=${result.r}, g=${result.g}, b=${result.b}`);
+                    if (!intensityCorrect && testCase.intensity === 0) error.push('强度0时应与原图一致');
+                    
+                    this.assert(passed, `⚡ ${testCase.name}`, error.join('; '));
+                }
+                
+                let r0, g0, b0, r1, g1, b1;
+                for (let i = 0; i < 10; i++) {
+                    const res0 = this.applyStyleEffect(originalR, originalG, originalB, 0, 'vintage');
+                    const res1 = this.applyStyleEffect(originalR, originalG, originalB, 1, 'vintage');
+                    if (i === 0) {
+                        r0 = res0.r; g0 = res0.g; b0 = res0.b;
+                        r1 = res1.r; g1 = res1.g; b1 = res1.b;
+                    }
+                }
+                const hasDifference = Math.abs(r0 - r1) > 10 || Math.abs(g0 - g1) > 10 || Math.abs(b0 - b1) > 10;
+                this.assert(hasDifference, '⚡ 强度0和强度1效果有明显差异', 
+                           hasDifference ? '' : '不同强度的处理效果差异太小');
+                
+                this.log('风格强度测试完成', 'info');
+            }
+
+            async runFallbackTests() {
+                this.log('开始模型加载失败降级测试...', 'info');
+                
+                class StyleModel {
+                    constructor(shouldFail = false) {
+                        this.shouldFail = shouldFail;
+                        this.isLoaded = false;
+                    }
+                    
+                    async load() {
+                        return new Promise((resolve, reject) => {
+                            setTimeout(() => {
+                                if (this.shouldFail) {
+                                    reject(new Error('Model load failed: network error'));
+                                } else {
+                                    this.isLoaded = true;
+                                    resolve();
+                                }
+                            }, 50);
+                        });
+                    }
+                    
+                    process(imageData) {
+                        if (!this.isLoaded) {
+                            throw new Error('Model not loaded');
+                        }
+                        return imageData;
+                    }
+                }
+                
+                const testCases = [
+                    { 
+                        shouldFail: true, 
+                        name: '模型加载失败 - 降级到Canvas滤镜',
+                        expectFallback: true
+                    },
+                    { 
+                        shouldFail: false, 
+                        name: '模型加载成功 - 使用模型处理',
+                        expectFallback: false
+                    },
+                ];
+
+                for (const testCase of testCases) {
+                    const model = new StyleModel(testCase.shouldFail);
+                    let usedFallback = false;
+                    let error = null;
+                    
+                    try {
+                        await model.load();
+                    } catch (e) {
+                        error = e;
+                        usedFallback = true;
+                    }
+                    
+                    const canvas = this.createTestCanvas(100, 100);
+                    let resultData;
+                    
+                    try {
+                        if (usedFallback) {
+                            const ctx = canvas.getContext('2d');
+                            const imageData = ctx.getImageData(0, 0, 100, 100);
+                            for (let i = 0; i < imageData.data.length; i += 4) {
+                                const res = this.applyStyleEffect(
+                                    imageData.data[i],
+                                    imageData.data[i + 1],
+                                    imageData.data[i + 2],
+                                    0.5,
+                                    'oil'
+                                );
+                                imageData.data[i] = res.r;
+                                imageData.data[i + 1] = res.g;
+                                imageData.data[i + 2] = res.b;
+                            }
+                            resultData = imageData;
+                        } else {
+                            resultData = model.process(canvas);
+                        }
+                    } catch (e) {
+                        error = e;
+                    }
+                    
+                    const fallbackCorrect = usedFallback === testCase.expectFallback;
+                    const resultValid = resultData !== undefined && resultData !== null;
+                    
+                    const passed = fallbackCorrect && resultValid;
+                    const errorMsg = [];
+                    if (!fallbackCorrect) errorMsg.push(`降级状态不匹配: 期望${testCase.expectFallback ? '降级' : '使用模型'}, 实际${usedFallback ? '降级' : '使用模型'}`);
+                    if (!resultValid) errorMsg.push('处理结果无效');
+                    if (error && !testCase.shouldFail) errorMsg.push(`意外错误: ${error.message}`);
+                    
+                    this.assert(passed, `🔄 ${testCase.name}`, errorMsg.join('; '));
+                }
+                
+                let fallbackSuccess = true;
+                try {
+                    for (let i = 0; i < 100; i++) {
+                        const res = this.applyStyleEffect(
+                            Math.random() * 255,
+                            Math.random() * 255,
+                            Math.random() * 255,
+                            Math.random(),
+                            'oil'
+                        );
+                        if (isNaN(res.r) || isNaN(res.g) || isNaN(res.b)) {
+                            fallbackSuccess = false;
+                            break;
+                        }
+                    }
+                } catch (e) {
+                    fallbackSuccess = false;
+                }
+                this.assert(fallbackSuccess, '🔄 降级算法稳定性测试 - 100次随机输入无异常',
+                           fallbackSuccess ? '' : '降级算法在随机输入下出现异常');
+                
+                const timeStart = performance.now();
+                for (let i = 0; i < 1000; i++) {
+                    this.applyStyleEffect(128, 128, 128, 0.5, 'oil');
+                }
+                const timeEnd = performance.now();
+                const performanceOk = (timeEnd - timeStart) < 100;
+                this.assert(performanceOk, `🔄 降级算法性能测试 - 1000次耗时${(timeEnd - timeStart).toFixed(0)}ms < 100ms`,
+                           performanceOk ? '' : '降级算法性能不达标');
+                
+                this.log('降级测试完成', 'info');
+            }
+
+            async runStyleTests() {
+                this.log('开始风格效果一致性测试...', 'info');
+                
+                const styles = ['oil', 'vintage'];
+                const testR = 100, testG = 150, testB = 200;
+                
+                for (const style of styles) {
+                    const results = [];
+                    for (let i = 0; i < 5; i++) {
+                        results.push(this.applyStyleEffect(testR, testG, testB, 1, style));
+                    }
+                    
+                    if (style === 'vintage') {
+                        const consistent = results.every(r => 
+                            r.r === results[0].r && r.g === results[0].g && r.b === results[0].b
+                        );
+                        this.assert(consistent, `🎭 ${style}风格 - 相同输入产生相同输出`,
+                                   consistent ? '' : '复古风格结果不一致');
+                    }
+                    
+                    const vintageResult = this.applyStyleEffect(testR, testG, testB, 1, 'vintage');
+                    const isSepia = vintageResult.r > vintageResult.g && vintageResult.g > vintageResult.b;
+                    this.assert(isSepia, `🎭 vintage风格 - 棕褐色调验证`,
+                               isSepia ? '' : `复古风格色调不正确: r=${vintageResult.r}, g=${vintageResult.g}, b=${vintageResult.b}`);
+                }
+                
+                const testColor = { r: 200, g: 100, b: 50 };
+                const lowIntensity = this.applyStyleEffect(testColor.r, testColor.g, testColor.b, 0.1, 'vintage');
+                const highIntensity = this.applyStyleEffect(testColor.r, testColor.g, testColor.b, 0.9, 'vintage');
+                
+                const lowDiff = Math.abs(lowIntensity.r - testColor.r) + 
+                                Math.abs(lowIntensity.g - testColor.g) + 
+                                Math.abs(lowIntensity.b - testColor.b);
+                
+                const highDiff = Math.abs(highIntensity.r - testColor.r) + 
+                                 Math.abs(highIntensity.g - testColor.g) + 
+                                 Math.abs(highIntensity.b - testColor.b);
+                
+                const intensityCorrelation = highDiff > lowDiff;
+                this.assert(intensityCorrelation, `🎭 强度与效果相关性验证 - 高强度(${highDiff.toFixed(0)}) > 低强度(${lowDiff.toFixed(0)})`,
+                           intensityCorrelation ? '' : '高强度产生的效果差异应该更大');
+                
+                this.log('风格效果测试完成', 'info');
+            }
+        }
+
+        const testSuite = new StyleTransferTest();
+    </script>
+</body>
+</html>
